@@ -167,6 +167,20 @@ public class WordMultiset extends AbstractMap<String,Integer>
 	 */
 	private void rehash() {
 		// TODO
+		int c = Primes.nextTwinPrime(Math.max(4 * numEntries, INITIAL_CAPACITY)-1);
+	    MyEntry[] o = data;
+	    data = new MyEntry[c];
+	    numUsed = 0;
+	    numEntries = 0;	    
+	    for (MyEntry entry : o) {
+	        if (entry != null && entry != PLACE_HOLDER) {
+	            int index = hash(entry.getKey(), false);
+	            data[index] = entry;
+	            numUsed++;
+	            numEntries++;
+	        }
+	    }
+	    version++;
 	}
 	
 	
