@@ -183,6 +183,30 @@ public class WordMultiset extends AbstractMap<String,Integer>
 	    version++;
 	}
 	
+	@Override
+	public Integer put(String key, Integer value) {
+		    assert wellFormed() : "invariant false at start of put";
+		    if (key == null) throw new NullPointerException("Key is null");
+		    if (value == null || value <= 0) throw new IllegalArgumentException("Value is negative");
+		    int index = hash(key, true);
+		    MyEntry e = data[index];		    
+		    if (e != null && e != PLACE_HOLDER && e.getKey().equals(key)) {
+		        Integer o = e.getValue();
+		        e.setValue(value);
+		        version++;		        
+		        assert wellFormed() : "invariant false at end of put";
+		        return o;
+		    } else {
+		        data[index] = new MyEntry(key, value);
+		        numUsed++; 
+		        numEntries++;
+		        version++;
+		        if (numUsed > data.length / 2) rehash();
+		        assert wellFormed() : "invariant false at end of put";
+		        return null;
+		    }
+	}
+
 	
 	/**
 	 * Add a new string to the multiset. If it already exists, 
