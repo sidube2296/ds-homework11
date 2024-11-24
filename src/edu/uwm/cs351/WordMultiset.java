@@ -65,7 +65,19 @@ public class WordMultiset extends AbstractMap<String,Integer>
 	 * @return first index meeting the requirements using double hashing.
 	 */
 	private int hash(String key, boolean phOK) {
-		return -1; // TODO
+		// TODO
+	    int L = data.length;
+	    int h1 = Math.floorMod(key.hashCode(), L); // Primary hash
+	    int h2 = 1 + Math.floorMod(key.hashCode(), L - 2); // Secondary hash
+	    int index = h1;
+
+	    while (true) {
+	        if (data[index] == null || (data[index].string != null && data[index].string.equals(key))) {
+	            return index; // Found a match or an empty slot
+	        }
+	        index = Math.floorMod(index + h2, L); // Probe to the next index using double hashing
+	    }
+
 	}
 	
 	private static Consumer<String> reporter = (s) -> System.out.println("Invariant error: "+ s);
