@@ -108,6 +108,35 @@ public class WordMultiset extends AbstractMap<String,Integer>
 	 */
 	private boolean wellFormed() {
 		// TODO
+	    if (data == null) return report("Data array is null");
+
+	    if (data.length < INITIAL_CAPACITY) return report("Data array length is less than the initial capacity.");	    
+	    if (!Primes.isPrime(data.length)) return report("Data array length is not a prime.");
+
+	    if (!Primes.isPrime(data.length - 2)) return report("Data array length and length-2 are not twin primes.");
+	    
+	    int n = 0;
+	    int m = 0;
+	    
+	    for (int i = 0; i < data.length; i++) {
+	        MyEntry entry = data[i];        
+	        if (entry != null) {
+	            n++;	            
+	            if (entry != PLACE_HOLDER) {
+	                m++;
+	                if (entry.getKey() == null) return report("Real entry at index " + i + " has a null key.");	                
+	                if (entry.getValue() == null || entry.getValue() <= 0) return report("Real entry at index " + i + " has a non-positive count.");
+	                int f = hash(entry.getKey(), false);
+	                if (f != i) return report("Real entry for key \"" + entry.getKey() + "\" should be at index " + f + " but found at index " + i + ".");
+	            }
+	        }
+	    }
+	    if (numUsed != n) return report("numUsed (" + numUsed + ") does not match actual number of used slots (" + n + ").");
+
+	    if (numEntries != m) return report("numEntries (" + numEntries + ") does not match actual number of real entries (" + m + ").");
+
+	    if (numUsed > data.length / 2) return report("numUsed (" + numUsed + ") exceeds half of the array length (" + data.length / 2 + ").");
+
 		return true;
 	}
 
@@ -118,6 +147,10 @@ public class WordMultiset extends AbstractMap<String,Integer>
 	 */
 	public WordMultiset() {
 		// TODO: Implement the constructor (BEFORE the assertion!)
+		data = new MyEntry[INITIAL_CAPACITY];
+	    numUsed = 0;
+	    numEntries = 0;
+	    version = 0;
 		assert wellFormed() : "invariant false at end of constructor";
 	}
 	
