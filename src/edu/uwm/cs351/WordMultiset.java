@@ -76,12 +76,8 @@ public class WordMultiset extends AbstractMap<String,Integer>
 	        if (data[index] == null) {
 	            return (phOK && f_index != -1) ? f_index : index;
 	        } else if (data[index] == PLACE_HOLDER) {
-	            if (phOK && f_index == -1) {
-	            	f_index = index;
-	            }
-	        } else if (data[index].string != null && data[index].string.equals(key)) {
-	            return index;
-	        }
+	            if (phOK && f_index == -1) f_index = index;
+	        } else if (data[index].string != null && data[index].string.equals(key)) return index;
 	        index = Math.floorMod(index + h2, L);
 	    }
 	}
@@ -187,23 +183,28 @@ public class WordMultiset extends AbstractMap<String,Integer>
 	public Integer put(String key, Integer value) {
 		    assert wellFormed() : "invariant false at start of put";
 		    if (key == null) throw new NullPointerException("Key is null");
-		    if (value == null || value <= 0) throw new IllegalArgumentException("Value is negative");
+		    if (value == null || value <= 0) throw new IllegalArgumentException("Value is negative.");
 		    int index = hash(key, true);
-		    MyEntry e = data[index];		    
+		    MyEntry e = data[index];
 		    if (e != null && e != PLACE_HOLDER && e.getKey().equals(key)) {
 		        Integer o = e.getValue();
-		        e.setValue(value);		        
+		        e.setValue(value);
 		        assert wellFormed() : "invariant false at end of put";
 		        return o;
 		    } else {
-		        data[index] = new MyEntry(key, value);
-		        numUsed++; 
-		        numEntries++;
-		        version++;
+		        if (e == PLACE_HOLDER) {
+		            data[index] = new MyEntry(key, value);
+		            numEntries++;
+		        } else {
+		            data[index] = new MyEntry(key, value);
+		            numEntries++;
+		            numUsed++;
+		        }
 		        if (numUsed > data.length / 2) rehash();
+		        version++;
 		        assert wellFormed() : "invariant false at end of put";
 		        return null;
-		    }
+		    }	
 	}
 	
 	@Override
@@ -255,6 +256,19 @@ public class WordMultiset extends AbstractMap<String,Integer>
 		assert wellFormed() : "invariant false at start of add";
 		boolean result = false;
 		// TODO: Implement this method
+		if (str == null) throw new NullPointerException("String to add cannot be null");	    
+	    int index = hash(str, true);
+	    MyEntry entry = data[index];	    
+	    if (entry != null && entry != PLACE_HOLDER && entry.getKey().equals(str))  entry.count++;
+	    else {
+	        if (entry == PLACE_HOLDER) {
+	        } else numUsed++;
+	        data[index] = new MyEntry(str, 1);
+	        numEntries++;
+	        result = true;
+	        if (numUsed > data.length / 2) rehash();
+	    }	    
+	    version++;
 		assert wellFormed() : "invariant false at end of add";
 		return result;
 	}
@@ -270,6 +284,21 @@ public class WordMultiset extends AbstractMap<String,Integer>
 		assert wellFormed() : "invariant false at start of removeOne";
 		boolean result = false;
 		// TODO: implement this method
+		 if (str == null) {
+		        assert wellFormed() : "invariant false at end of removeOne";
+		        return false;
+		    }		    
+		    int index = hash(str, false);
+		    MyEntry e = data[index];		    
+		    if (e != null && e != PLACE_HOLDER && e.getKey().equals(str)) {
+		        if (e.count > 1) e.count--;
+		        else {
+		            data[index] = PLACE_HOLDER;
+		            numEntries--;
+		        }
+		        version++;
+		        result = true;
+		    }
 		assert wellFormed() : "invariant false at end of removeOne";
 		return result;
 	}
