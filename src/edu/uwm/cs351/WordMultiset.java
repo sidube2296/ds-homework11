@@ -221,6 +221,26 @@ public class WordMultiset extends AbstractMap<String,Integer>
 	    return null;
 	}
 	
+	@Override
+	public Integer remove(Object key) {
+	    assert wellFormed() : "invariant false at start of remove";
+	    if (!(key instanceof String)) return null;
+	    String s = (String) key;
+	    int index = hash(s, false);
+	    MyEntry e = data[index];
+	    if (e != null && e != PLACE_HOLDER && e.getKey().equals(s)) {
+	        Integer o = e.getValue();
+	        data[index] = PLACE_HOLDER;
+	        numEntries--;
+	        version++; 	        
+	        assert wellFormed() : "invariant false at end of remove";
+	        return o;
+	    }	    
+	    assert wellFormed() : "invariant false at end of remove";
+	    return null;
+	}
+
+	
 
 	
 	/**
@@ -323,7 +343,7 @@ public class WordMultiset extends AbstractMap<String,Integer>
 		}
 		
 		// TODO: a helper method
-		private void findNextValidIndex() {
+		private void advance() {
 		    while (++index < data.length)		    	
 		        if (data[index] != null && data[index] != PLACE_HOLDER) return;			        
 		    index = data.length;		    
@@ -335,7 +355,7 @@ public class WordMultiset extends AbstractMap<String,Integer>
 		    this.remaining = numEntries;
 		    this.canRemove = false;
 		    this.colVersion = version;
-		    findNextValidIndex();
+		    advance();
 			assert wellFormed() : "invariant broken in iterator constructor";
 		}
 		
@@ -354,9 +374,9 @@ public class WordMultiset extends AbstractMap<String,Integer>
 		public Entry<String, Integer> next() {
 			assert wellFormed() : "invariant broken in next";
 			checkVersion();
-			if (!hasNext()) throw new NoSuchElementException("no more");
+			if (!hasNext()) throw new NoSuchElementException("No element");
 			// TODO: complete
-			if(canRemove) findNextValidIndex();					
+			if(canRemove) advance();					
 			remaining--;
 			canRemove = true;
 		    assert wellFormed() : "invariant broken by next";
@@ -369,15 +389,13 @@ public class WordMultiset extends AbstractMap<String,Integer>
 			assert wellFormed() : "invariant broken in remove";
 			checkVersion();
 			// TODO	
-			 if (!canRemove) throw new IllegalStateException("remove() called without a preceding next()");
+			 if (!canRemove) throw new IllegalStateException("remove() called without a calling next()");
 			 MyEntry e = data[index];
 			 if (e == null || e == PLACE_HOLDER) throw new IllegalStateException("No element to remove at current index");
-			  data[index] = PLACE_HOLDER;
-			  numEntries--;
-			  version++;
-			  colVersion = version;
-			  canRemove = false;
-			  findNextValidIndex();
+			 WordMultiset.this.remove(e.getKey()); 
+			 colVersion = version;
+			 canRemove = false;
+			 advance();
 			assert wellFormed() : "invariant broken by remove";
 		}
 	}
