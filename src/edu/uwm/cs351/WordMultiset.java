@@ -179,7 +179,7 @@ public class WordMultiset extends AbstractMap<String,Integer>
 	    version++;
 	}
 	
-	@Override
+	@Override // required
 	public Integer put(String key, Integer value) {
 		    assert wellFormed() : "invariant false at start of put";
 		    if (key == null) throw new NullPointerException("Key is null");
@@ -207,22 +207,22 @@ public class WordMultiset extends AbstractMap<String,Integer>
 		    }	
 	}
 	
-	@Override
+	@Override // required
 	public Integer get(Object key) {
 	    assert wellFormed() : "invariant false at start of get";
 	    if (!(key instanceof String)) return null; 
 	    String strKey = (String) key;
 	    int index = hash(strKey, false);	    
-	    MyEntry entry = data[index];	    
-	    if (entry != null && entry != PLACE_HOLDER && entry.getKey().equals(strKey)) {
+	    MyEntry e = data[index];	    
+	    if (e != null && e != PLACE_HOLDER && e.getKey().equals(strKey)) {
 	        assert wellFormed() : "invariant false at end of get";
-	        return entry.getValue();
+	        return e.getValue();
 	    } 
 	    assert wellFormed() : "invariant false at end of get";
 	    return null;
 	}
 	
-	@Override
+	@Override //implementation
 	public Integer remove(Object key) {
 	    assert wellFormed() : "invariant false at start of remove";
 	    if (!(key instanceof String)) return null;
@@ -233,16 +233,40 @@ public class WordMultiset extends AbstractMap<String,Integer>
 	        Integer o = e.getValue();
 	        data[index] = PLACE_HOLDER;
 	        numEntries--;
-	        version++; 	        
+	        version++;	        
 	        assert wellFormed() : "invariant false at end of remove";
 	        return o;
 	    }	    
 	    assert wellFormed() : "invariant false at end of remove";
 	    return null;
 	}
-
 	
-
+	@Override //efficiency
+	public boolean containsKey(Object key) {
+	    assert wellFormed() : "invariant false at start of containsKey";    
+	    if (!(key instanceof String)) return false;
+	    String s = (String) key;	    
+	    int index = hash(s, false);	    
+	    MyEntry e = data[index];	    
+	    if (e != null && e != PLACE_HOLDER && e.getKey().equals(s)) {
+	        assert wellFormed() : "invariant false at end of containsKey";
+	        return true;
+	    }	    
+	    assert wellFormed() : "invariant false at end of containsKey";
+	    return false;
+	}
+	
+	@Override //efficiency
+	public void clear() {
+	    assert wellFormed() : "invariant false at start of clear";
+	    if(numEntries > 0) {
+		    data = new MyEntry[INITIAL_CAPACITY];
+		    numUsed = 0;
+		    numEntries = 0;
+		    version++;
+	    }
+	    assert wellFormed() : "invariant false at end of clear";
+	}
 	
 	/**
 	 * Add a new string to the multiset. If it already exists, 
@@ -265,10 +289,11 @@ public class WordMultiset extends AbstractMap<String,Integer>
 	        } else numUsed++;
 	        data[index] = new MyEntry(str, 1);
 	        numEntries++;
+	        version++;
 	        result = true;
 	        if (numUsed > data.length / 2) rehash();
 	    }	    
-	    version++;
+	    
 		assert wellFormed() : "invariant false at end of add";
 		return result;
 	}
@@ -295,8 +320,9 @@ public class WordMultiset extends AbstractMap<String,Integer>
 		        else {
 		            data[index] = PLACE_HOLDER;
 		            numEntries--;
+		            version++;
 		        }
-		        version++;
+		        
 		        result = true;
 		    }
 		assert wellFormed() : "invariant false at end of removeOne";
@@ -318,6 +344,7 @@ public class WordMultiset extends AbstractMap<String,Integer>
 			assert wellFormed(): "invariant failed in size";
 			return numEntries;
 		}
+		
 		
 		@Override // efficiency
 		public boolean contains(Object x) {
@@ -343,6 +370,11 @@ public class WordMultiset extends AbstractMap<String,Integer>
 		}
 		
 		// TODO: efficiency override. (Wait until doing efficiency testing)
+		 @Override //efficiency
+	        public void clear() {
+	            WordMultiset.this.clear();
+	            
+	        }
 	}
 	
 	private class EntrySetIterator implements Iterator<Map.Entry<String, Integer>> {
@@ -420,11 +452,11 @@ public class WordMultiset extends AbstractMap<String,Integer>
 			// TODO	
 			 if (!canRemove) throw new IllegalStateException("remove() called without a calling next()");
 			 MyEntry e = data[index];
-			 if (e == null || e == PLACE_HOLDER) throw new IllegalStateException("No element to remove at current index");
-			 WordMultiset.this.remove(e.getKey()); 
-			 colVersion = version;
-			 canRemove = false;
+			 WordMultiset.this.remove(e.getKey());
 			 advance();
+			 colVersion = version;
+			 canRemove = false;			 
+			 
 			assert wellFormed() : "invariant broken by remove";
 		}
 	}
