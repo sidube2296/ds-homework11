@@ -221,6 +221,8 @@ public class WordMultiset extends AbstractMap<String,Integer>
 	    return null;
 	}
 	
+
+	
 	/**
 	 * Add a new string to the multiset. If it already exists, 
 	 * increase the count for the string and return false.
@@ -366,8 +368,16 @@ public class WordMultiset extends AbstractMap<String,Integer>
 		public void remove() {
 			assert wellFormed() : "invariant broken in remove";
 			checkVersion();
-			// TODO			
-			colVersion = version;
+			// TODO	
+			 if (!canRemove) throw new IllegalStateException("remove() called without a preceding next()");
+			 MyEntry e = data[index];
+			 if (e == null || e == PLACE_HOLDER) throw new IllegalStateException("No element to remove at current index");
+			  data[index] = PLACE_HOLDER;
+			  numEntries--;
+			  version++;
+			  colVersion = version;
+			  canRemove = false;
+			  findNextValidIndex();
 			assert wellFormed() : "invariant broken by remove";
 		}
 	}
