@@ -192,8 +192,7 @@ public class WordMultiset extends AbstractMap<String,Integer>
 		    MyEntry e = data[index];		    
 		    if (e != null && e != PLACE_HOLDER && e.getKey().equals(key)) {
 		        Integer o = e.getValue();
-		        e.setValue(value);
-		        version++;		        
+		        e.setValue(value);		        
 		        assert wellFormed() : "invariant false at end of put";
 		        return o;
 		    } else {
@@ -322,8 +321,19 @@ public class WordMultiset extends AbstractMap<String,Integer>
 		}
 		
 		// TODO: a helper method
+		private void findNextValidIndex() {
+		    while (++index < data.length)		    	
+		        if (data[index] != null && data[index] != PLACE_HOLDER) return;			        
+		    index = data.length;		    
+		}
+
 		
 		EntrySetIterator() {
+			this.index = -1;
+		    this.remaining = numEntries;
+		    this.canRemove = false;
+		    this.colVersion = version;
+		    findNextValidIndex();
 			assert wellFormed() : "invariant broken in iterator constructor";
 		}
 		
@@ -335,7 +345,7 @@ public class WordMultiset extends AbstractMap<String,Integer>
 		public boolean hasNext() {
 			assert wellFormed() : "invariant broken in hasNext";
 			checkVersion();
-			return false; // TODO
+			return remaining > 0; // TODO
 		}
 
 		@Override //required
@@ -344,15 +354,19 @@ public class WordMultiset extends AbstractMap<String,Integer>
 			checkVersion();
 			if (!hasNext()) throw new NoSuchElementException("no more");
 			// TODO: complete
-			assert wellFormed() : "invariant broken by next";
-			return data[index];
+			if(canRemove) findNextValidIndex();					
+			remaining--;
+			canRemove = true;
+		    assert wellFormed() : "invariant broken by next";
+		    return data[index];
 		}
+
 		
 		@Override // implementation
 		public void remove() {
 			assert wellFormed() : "invariant broken in remove";
 			checkVersion();
-			// TODO
+			// TODO			
 			colVersion = version;
 			assert wellFormed() : "invariant broken by remove";
 		}
