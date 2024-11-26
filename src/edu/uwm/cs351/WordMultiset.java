@@ -179,7 +179,7 @@ public class WordMultiset extends AbstractMap<String,Integer>
 	    version++;
 	}
 	
-	@Override // required
+	@Override // implemented
 	public Integer put(String key, Integer value) {
 		    assert wellFormed() : "invariant false at start of put";
 		    if (key == null) throw new NullPointerException("Key is null");
@@ -207,7 +207,7 @@ public class WordMultiset extends AbstractMap<String,Integer>
 		    }	
 	}
 	
-	@Override // required
+	@Override // efficiency
 	public Integer get(Object key) {
 	    assert wellFormed() : "invariant false at start of get";
 	    if (!(key instanceof String)) return null; 
@@ -222,7 +222,7 @@ public class WordMultiset extends AbstractMap<String,Integer>
 	    return null;
 	}
 	
-	@Override //implementation
+	@Override //efficiency
 	public Integer remove(Object key) {
 	    assert wellFormed() : "invariant false at start of remove";
 	    if (!(key instanceof String)) return null;
